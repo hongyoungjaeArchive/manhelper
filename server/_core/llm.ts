@@ -263,6 +263,39 @@ const normalizeResponseFormat = ({
   };
 };
 
+/** 한자·일본어 등 CJK 문자 포함 여부 감지 */
+const hasCJK = (text: string) =>
+  /[\u4E00-\u9FFF\u3040-\u30FF\u3400-\u4DBF\uF900-\uFAFF]/.test(text);
+
+/**
+ * 한국어 전용 LLM 호출 — 응답에 한자가 섞이면 자동으로 한 번 재시도하여
+ * 순수 한국어 응답을 반환합니다.
+ */
+export async function invokeKoreanLLM(params: InvokeParams): Promise<string> {
+  const result = await invokeLLM(params);
+  const raw = result.choices[0]?.message.content;
+  const text = typeof raw === "string" ? raw : "";
+
+  if (!hasCJK(text)) return text;
+
+  // 한자 감지 → 한국어로 교정 재요청
+  const retryResult = await invokeLLM({
+    ...params,
+    messages: [
+      ...params.messages,
+      { role: "assistant", content: text },
+      {
+        role: "user",
+        content:
+          "위 답변에 한자 또는 외국어가 포함됐습니다. 한자와 외국어를 모두 자연스러운 한국어로 바꿔서 전체 답변을 다시 작성하세요. 한국어만 사용하세요.",
+      },
+    ],
+  });
+
+  const retryRaw = retryResult.choices[0]?.message.content;
+  return typeof retryRaw === "string" ? retryRaw : text;
+}
+
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   assertApiKey();
 

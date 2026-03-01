@@ -17,7 +17,7 @@ import {
   createRecommendedMessage,
   getUserRecommendedMessages
 } from "./db";
-import { invokeLLM } from "./_core/llm";
+import { invokeKoreanLLM } from "./_core/llm";
 
 // 공통 시스템 지시사항 - 모든 AI 기능에 적용
 const KOREAN_ONLY = `[언어 규칙 - 절대 준수]
@@ -28,6 +28,39 @@ const COUPLE_EXAMPLES = `[실제 한국 커플 대화 패턴 참고]
 상황2 - 관심 감소: 처음엔 하루 100개 카톡 → 3개월 후 하루 5개 → 상대방이 먼저 불안 → 더 조르다 → 더 멀어짐
 상황3 - 화해: 먼저 사과하면 70% 해결 → 단, "미안해 근데 너도~"는 역효과
 상황4 - 썸 진행: 단순 친구 → 카카오톡 이모티콘 변화 → 야간 연락 증가 → 단둘이 만남 → 스킨십 허용`;
+
+/** 과거 상담 이력을 AI 컨텍스트로 변환 — 반복 패턴을 파악해 개인화된 조언 제공 */
+async function buildUserHistoryContext(userId: string): Promise<string> {
+  const past = await getUserAiConsultations(userId, 10);
+  if (past.length === 0) return "";
+
+  // 유형별 빈도 집계
+  const typeCounts: Record<string, number> = {};
+  for (const c of past) {
+    typeCounts[c.consultationType] = (typeCounts[c.consultationType] ?? 0) + 1;
+  }
+
+  // 최근 3개 요약 (userInput 앞 60자)
+  const recentSummary = past
+    .slice(0, 3)
+    .map((c, i) => {
+      const typeLabel: Record<string, string> = { crisis: "위기", signalAnalysis: "신호분석", chat: "채팅" };
+      return `${i + 1}. [${typeLabel[c.consultationType] ?? c.consultationType}] ${(c.userInput ?? "").slice(0, 60)}`;
+    })
+    .join("\n");
+
+  const freqNote = Object.entries(typeCounts)
+    .map(([k, v]) => {
+      const labels: Record<string, string> = { crisis: "위기 상담", signalAnalysis: "신호 분석", chat: "채팅" };
+      return `${labels[k] ?? k} ${v}회`;
+    })
+    .join(", ");
+
+  return `\n[이 사용자의 상담 이력 — 누적 ${past.length}회: ${freqNote}]
+최근 상담:
+${recentSummary}
+→ 위 패턴을 바탕으로 이 사용자의 관계 상황을 파악하고 더 정확한 조언을 제공하세요.`;
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -148,10 +181,12 @@ export const appRouter = router({
           throw new Error("일일 사용 횟수를 초과했습니다.");
         }
 
-        // 사용자 프로필 조회
-        const profile = await getUserProfile(ctx.user.id);
-        
-        // LLM을 통한 AI 분석
+        // 사용자 프로필 + 상담 이력 병렬 조회
+        const [profile, historyContext] = await Promise.all([
+          getUserProfile(ctx.user.id),
+          buildUserHistoryContext(ctx.user.id),
+        ]);
+
         const relationshipLabel: Record<string, string> = {
           dating: "연인 관계", crush: "썸 타는 관계", longDistance: "장거리 연애", newlywed: "신혼 부부"
         };
@@ -178,21 +213,18 @@ ${input.situation}
 💬 지금 보낼 메시지
 (따옴표 없이 메시지 본문만, 20자 내외)`;
 
-        const response = await invokeLLM({
+        const aiResponse = await invokeKoreanLLM({
           messages: [
             {
               role: "system",
               content: `남성 연애 상담 전문가입니다. 남자들이 읽기 좋게 짧고 직접적으로 답합니다.
 ${KOREAN_ONLY}
-${COUPLE_EXAMPLES}
+${COUPLE_EXAMPLES}${historyContext}
 답변은 반드시 300자 이내로 유지하세요. 서론 없이 바로 핵심을 말하세요.`
             },
             { role: "user", content: prompt },
           ],
         });
-
-        const responseContent = response.choices[0]?.message.content;
-        const aiResponse = typeof responseContent === 'string' ? responseContent : "분석 결과를 생성할 수 없습니다.";
 
         // AI 상담 이력 저장
         await createAiConsultation(ctx.user.id, {
@@ -256,21 +288,19 @@ ${input.positiveSignals.find(s => s.startsWith('[현재')) || ''}
 ⚠️ 착각 주의
 (딱 한 줄)`;
 
-        const response = await invokeLLM({
+        const historyCtx = await buildUserHistoryContext(ctx.user.id);
+        const analysis = await invokeKoreanLLM({
           messages: [
             {
               role: "system",
               content: `남성 연애 신호 분석 전문가입니다. 팩트 중심으로 짧고 직접적으로 분석합니다.
 ${KOREAN_ONLY}
-${COUPLE_EXAMPLES}
+${COUPLE_EXAMPLES}${historyCtx}
 답변은 반드시 300자 이내로 유지하세요. 서론 없이 바로 분석하세요.`
             },
             { role: "user", content: prompt },
           ],
         });
-
-        const responseContent = response.choices[0]?.message.content;
-        const analysis = typeof responseContent === 'string' ? responseContent : "분석 결과를 생성할 수 없습니다.";
 
         // AI 상담 이력 저장
         await createAiConsultation(ctx.user.id, {
@@ -320,9 +350,11 @@ ${COUPLE_EXAMPLES}
         const chatRelType = profile?.relationshipType ? (chatRelMap[profile.relationshipType] || profile.relationshipType) : null;
         const partnerName = profile?.partnerName || null;
 
+        const chatHistoryCtx = await buildUserHistoryContext(ctx.user.id);
+
         const systemPrompt = `남성 연애 상담 전문가입니다. 남자 친구한테 말하듯 짧고 직접적으로 조언합니다.${profile ? ` 상대방${partnerName ? `(${partnerName})` : ''}과 ${chatRelType || '연인'} 관계입니다.` : ''}
 ${KOREAN_ONLY}
-${COUPLE_EXAMPLES}
+${COUPLE_EXAMPLES}${chatHistoryCtx}
 
 답변 규칙:
 - 200자 이내로 핵심만
@@ -330,16 +362,13 @@ ${COUPLE_EXAMPLES}
 - 필요하면 질문 하나 던져서 대화 이어가기
 - 서론, 요약, 마무리 인사 없이 바로 핵심`;
 
-        const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+        const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
           { role: "system", content: systemPrompt },
           ...(input.history || []).map(h => ({ role: h.role, content: h.content })),
           { role: "user", content: input.message },
         ];
 
-        const response = await invokeLLM({ messages });
-
-        const responseContent = response.choices[0]?.message.content;
-        const aiResponse = typeof responseContent === 'string' ? responseContent : "응답을 생성할 수 없습니다.";
+        const aiResponse = await invokeKoreanLLM({ messages: chatMessages });
 
         return {
           message: aiResponse,
@@ -377,7 +406,7 @@ ${COUPLE_EXAMPLES}
 
 카카오톡 메시지 한 개만 출력하세요. 설명·따옴표·이모지 없이 메시지 본문만.`;
 
-        const response = await invokeLLM({
+        const message = await invokeKoreanLLM({
           messages: [
             {
               role: "system",
@@ -388,9 +417,6 @@ ${KOREAN_ONLY}
             { role: "user", content: prompt },
           ],
         });
-
-        const responseContent = response.choices[0]?.message.content;
-        const message = typeof responseContent === 'string' ? responseContent : "메시지를 생성할 수 없습니다.";
 
         // 메시지 저장
         await createRecommendedMessage(ctx.user.id, {
