@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Heart, AlertCircle, Zap, MessageSquare } from "lucide-react";
+import { Heart, AlertCircle, Zap, MessageSquare, BotMessageSquare } from "lucide-react";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -108,6 +108,22 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 gap-6">
+          <button
+            onClick={() => setLocation("/chat")}
+            className="bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-500/40 rounded-lg p-6 hover:border-red-400 transition text-left md:col-span-2"
+          >
+            <div className="flex items-start gap-4">
+              <BotMessageSquare className="w-8 h-8 text-red-400 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-bold text-white mb-1">
+                  AI 채팅 상담
+                </h3>
+                <p className="text-slate-400 text-sm">
+                  AI 상담사와 대화하며 연애 고민을 함께 해결하세요.
+                </p>
+              </div>
+            </div>
+          </button>
           <button
             onClick={() => setLocation("/crisis")}
             className="bg-slate-800 border border-slate-700 rounded-lg p-6 hover:border-red-500 transition text-left"

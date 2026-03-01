@@ -14,6 +14,7 @@ import Crisis from "./pages/Crisis";
 import SignalAnalysis from "./pages/SignalAnalysis";
 import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
+import Chat from "./pages/Chat";
 import { useAuth } from "./_core/hooks/useAuth";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/signal-analysis" component={() => <ProtectedRoute component={SignalAnalysis} />} />
       <Route path="/messages" component={() => <ProtectedRoute component={Messages} />} />
       <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
+      <Route path="/chat" component={() => <ProtectedRoute component={Chat} />} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

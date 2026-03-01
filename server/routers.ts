@@ -262,6 +262,38 @@ ${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n')}
     history: protectedProcedure.query(async ({ ctx }) => {
       return await getUserAiConsultations(ctx.user.id, 20);
     }),
+
+    // 자유 채팅
+    chat: protectedProcedure
+      .input(z.object({
+        message: z.string().min(1).max(1000),
+        history: z.array(z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string(),
+        })).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 사용자 프로필 조회
+        const profile = await getUserProfile(ctx.user.id);
+
+        const systemPrompt = `당신은 연애 AI 상담사입니다. 사용자의 연애 고민을 들어주고 따뜻하고 실용적인 조언을 제공합니다.${profile ? `\n\n사용자 정보:\n- 관계 유형: ${profile.relationshipType || '미정'}\n- 상대방: ${profile.partnerName || '미정'}` : ''}`;
+
+        const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+          { role: "system", content: systemPrompt },
+          ...(input.history || []).map(h => ({ role: h.role, content: h.content })),
+          { role: "user", content: input.message },
+        ];
+
+        const response = await invokeLLM({ messages });
+
+        const responseContent = response.choices[0]?.message.content;
+        const aiResponse = typeof responseContent === 'string' ? responseContent : "응답을 생성할 수 없습니다.";
+
+        return {
+          message: aiResponse,
+          timestamp: new Date(),
+        };
+      }),
   }),
 
   // 추천 메시지 관련 프로시저
