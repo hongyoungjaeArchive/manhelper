@@ -106,6 +106,11 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
   return openId ? users.get(openId) : undefined;
 }
 
+/** username은 email 필드에 저장됨 — getUserByEmail의 시맨틱 별칭 */
+export async function getUserByUsername(username: string): Promise<User | undefined> {
+  return getUserByEmail(username);
+}
+
 export async function createLocalUser(insert: InsertUser & { passwordHash?: string | null }): Promise<User | undefined> {
   const ts = now();
   const newUser: User = {
