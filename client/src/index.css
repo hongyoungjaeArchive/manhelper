@@ -175,3 +175,41 @@
     }
   }
 }
+
+/* ===== 모바일 최적화 ===== */
+
+/* iOS Safari: input focus 시 자동 확대 방지 (font-size < 16px 일 때 발생) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="search"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* 탭 하이라이트 제거 (iOS/Android) */
+button,
+a,
+[role="button"],
+textarea,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* iPhone 홈 인디케이터 / 노치 safe area 유틸리티 */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}

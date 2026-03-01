@@ -130,7 +130,7 @@ export default function Signup() {
                   autoFocus
                   autoComplete="username"
                   maxLength={20}
-                  className={`w-full bg-slate-700/60 border rounded-xl px-4 py-3 pr-10 text-white placeholder-slate-500 focus:outline-none focus:bg-slate-700 transition text-sm ${
+                  className={`w-full bg-slate-700/60 border rounded-xl px-4 py-3 pr-10 text-white placeholder-slate-500 focus:outline-none focus:bg-slate-700 transition text-base ${
                     checkState === "available" ? "border-emerald-500" :
                     checkState === "taken" || checkState === "invalid" ? "border-red-500" :
                     "border-slate-600 focus:border-red-500"
@@ -159,7 +159,7 @@ export default function Signup() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   autoComplete="new-password"
-                  className="w-full bg-slate-700/60 border border-slate-600 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:bg-slate-700 transition text-sm"
+                  className="w-full bg-slate-700/60 border border-slate-600 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:bg-slate-700 transition text-base"
                 />
                 <button type="button" onClick={() => setShowPw(p => !p)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition">
@@ -178,7 +178,7 @@ export default function Signup() {
                   value={confirmPw}
                   onChange={e => setConfirmPw(e.target.value)}
                   autoComplete="new-password"
-                  className={`w-full bg-slate-700/60 border rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-500 focus:outline-none focus:bg-slate-700 transition text-sm ${
+                  className={`w-full bg-slate-700/60 border rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-500 focus:outline-none focus:bg-slate-700 transition text-base ${
                     pwMatch ? "border-emerald-500" : pwMismatch ? "border-red-500" : "border-slate-600 focus:border-red-500"
                   }`}
                 />

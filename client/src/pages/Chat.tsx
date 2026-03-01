@@ -84,7 +84,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+    <div className="h-[100dvh] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col overflow-hidden">
       {/* Header */}
       <header className="border-b border-slate-700 bg-slate-900/50 backdrop-blur sticky top-0 z-50 flex-shrink-0">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
@@ -166,7 +166,7 @@ export default function Chat() {
       </main>
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-slate-700 bg-slate-900/80 backdrop-blur">
+      <div className="flex-shrink-0 border-t border-slate-700 bg-slate-900/80 backdrop-blur pb-safe">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-end gap-3 bg-slate-800 border border-slate-600 rounded-2xl px-4 py-2 focus-within:border-red-500 transition">
             <textarea
@@ -174,8 +174,8 @@ export default function Chat() {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="메시지를 입력하세요... (Enter로 전송, Shift+Enter로 줄바꿈)"
-              className="flex-1 bg-transparent text-white placeholder-slate-500 focus:outline-none resize-none text-sm leading-relaxed min-h-[24px] max-h-[120px]"
+              placeholder="메시지를 입력하세요..."
+              className="flex-1 bg-transparent text-white placeholder-slate-500 focus:outline-none resize-none text-base leading-relaxed min-h-[24px] max-h-[120px]"
               rows={1}
               disabled={chatMutation.isPending}
             />

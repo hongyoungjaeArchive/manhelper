@@ -77,7 +77,7 @@ export default function Login() {
                 onChange={e => setUsername(e.target.value)}
                 autoFocus
                 autoComplete="username"
-                className="w-full bg-slate-700/60 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:bg-slate-700 transition text-sm"
+                className="w-full bg-slate-700/60 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:bg-slate-700 transition text-base"
               />
             </div>
 
@@ -90,7 +90,7 @@ export default function Login() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   autoComplete="current-password"
-                  className="w-full bg-slate-700/60 border border-slate-600 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:bg-slate-700 transition text-sm"
+                  className="w-full bg-slate-700/60 border border-slate-600 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:bg-slate-700 transition text-base"
                 />
                 <button
                   type="button"
