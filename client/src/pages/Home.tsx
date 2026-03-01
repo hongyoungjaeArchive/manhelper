@@ -135,12 +135,26 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-950 py-6">
-        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <Flame className="w-4 h-4 text-red-500" />
             <span className="text-sm font-bold text-slate-400">LOVIQ</span>
           </div>
-          <p className="text-slate-600 text-xs">&copy; 2026 Loviq AI</p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLocation("/privacy")}
+              className="text-slate-500 hover:text-slate-300 text-xs transition"
+            >
+              개인정보처리방침
+            </button>
+            <button
+              onClick={() => setLocation("/terms")}
+              className="text-slate-500 hover:text-slate-300 text-xs transition"
+            >
+              이용약관
+            </button>
+            <p className="text-slate-600 text-xs">&copy; 2026 Loviq AI</p>
+          </div>
         </div>
       </footer>
     </div>

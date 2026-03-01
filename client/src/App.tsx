@@ -16,6 +16,8 @@ import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
 import Chat from "./pages/Chat";
 import HerMessage from "./pages/HerMessage";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import { useAuth } from "./_core/hooks/useAuth";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -48,6 +50,8 @@ function Router() {
       <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
       <Route path="/chat" component={() => <ProtectedRoute component={Chat} />} />
       <Route path="/her-message" component={() => <ProtectedRoute component={HerMessage} />} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
