@@ -4,7 +4,7 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-// OAuth routes removed — local auth should be implemented separately.
+import { registerAuthRoutes } from "./auth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -48,9 +48,7 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // Register local auth routes (/api/auth/signup, /api/auth/login, /api/auth/logout)
-  import("./auth").then((m) => {
-    m.registerAuthRoutes(app as any);
-  }).catch((e) => console.warn("Failed to register auth routes:", e));
+  registerAuthRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",
