@@ -142,25 +142,33 @@ export const appRouter = router({
         const profile = await getUserProfile(ctx.user.id);
         
         // LLM을 통한 AI 분석
-        const prompt = `당신은 연애 전략 AI 의사결정 엔진입니다. 사용자의 연애 상황을 분석하고 즉각적인 전략을 제공합니다.
-
-사용자 정보:
+        const prompt = `사용자 정보:
 - 관계 유형: ${profile?.relationshipType || '미정'}
-- 상대방: ${profile?.partnerName || '미정'}
+- 상대방 이름: ${profile?.partnerName || '미정'}
 - 연락 빈도: 주당 ${profile?.contactFrequency || 7}회
 
-사용자의 상황:
+현재 상황:
 ${input.situation}
 
-위 상황에 대해 다음을 제공해주세요:
-1. 상황 분석 (2-3줄)
-2. 즉각적인 행동 전략 (3-4개 항목)
-3. 주의사항 (1-2줄)
-4. 추천 메시지 (1개, 실제 사용 가능한 메시지)`;
+위 상황에 대해 아래 형식으로 답변해 주세요:
+
+**📊 상황 분석**
+(상황을 2~3문장으로 따뜻하게 공감하며 분석)
+
+**💡 즉각적인 행동 전략**
+1. (구체적인 행동 제안)
+2. (구체적인 행동 제안)
+3. (구체적인 행동 제안)
+
+**⚠️ 주의사항**
+(꼭 피해야 할 행동 1~2가지)
+
+**💬 추천 메시지**
+"(바로 사용할 수 있는 자연스러운 한국어 문자 메시지)"`;
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "당신은 연애 전략 AI 의사결정 엔진입니다. 사용자의 연애 상황을 분석하고 즉각적인 전략을 제공합니다." },
+            { role: "system", content: "당신은 연애 심리 전문가이자 따뜻한 상담사입니다. 항상 자연스럽고 유창한 한국어로 답변하세요. 공감을 먼저 표현하고, 현실적이고 구체적인 조언을 제공하세요. 절대 어색한 직역체나 번역투를 사용하지 마세요." },
             { role: "user", content: prompt },
           ],
         });
@@ -211,22 +219,30 @@ ${input.situation}
         }
 
         // LLM을 통한 신호 분석
-        const prompt = `당신은 연애 신호 분석 전문가입니다. 사용자가 제시한 신호들을 분석하여 상대방의 호감도를 평가합니다.
+        const prompt = `긍정적인 신호 (${positiveCount}개):
+${input.positiveSignals.map((s, i) => `${i + 1}. ${s}`).join('\n') || '없음'}
 
-긍정 신호 (${positiveCount}개):
-${input.positiveSignals.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+부정적인 신호 (${negativeCount}개):
+${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n') || '없음'}
 
-부정 신호 (${negativeCount}개):
-${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+계산된 호감도 수치: ${probability}%
 
-위 신호들을 분석하여:
-1. 호감도 평가 (${probability}%)
-2. 신호 해석 (각 신호의 의미)
-3. 추천 행동 (다음 단계)`;
+아래 형식으로 분석해 주세요:
+
+**❤️ 호감도 평가: ${probability}%**
+(전체적인 상황을 2~3문장으로 솔직하게 평가)
+
+**🔍 신호 해석**
+(각 신호가 실제로 어떤 심리를 나타내는지 구체적으로 설명)
+
+**👣 다음 단계 추천**
+1. (지금 당장 해볼 수 있는 행동)
+2. (중기적으로 관계를 발전시킬 방법)
+3. (주의해야 할 점)`;
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "당신은 연애 신호 분석 전문가입니다." },
+            { role: "system", content: "당신은 연애 심리와 비언어적 신호 해석에 정통한 전문가입니다. 항상 자연스럽고 유창한 한국어로 답변하세요. 솔직하되 배려 있게, 현실적이고 실용적인 조언을 제공하세요. 어색한 번역투나 딱딱한 표현은 절대 사용하지 마세요." },
             { role: "user", content: prompt },
           ],
         });
@@ -276,7 +292,22 @@ ${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n')}
         // 사용자 프로필 조회
         const profile = await getUserProfile(ctx.user.id);
 
-        const systemPrompt = `당신은 연애 AI 상담사입니다. 사용자의 연애 고민을 들어주고 따뜻하고 실용적인 조언을 제공합니다.${profile ? `\n\n사용자 정보:\n- 관계 유형: ${profile.relationshipType || '미정'}\n- 상대방: ${profile.partnerName || '미정'}` : ''}`;
+        const relationshipMap: Record<string, string> = {
+          dating: "연인",
+          crush: "썸",
+          longDistance: "장거리 연애",
+          newlywed: "신혼",
+        };
+        const relType = profile?.relationshipType ? (relationshipMap[profile.relationshipType] || profile.relationshipType) : null;
+        const systemPrompt = `당신은 연애 심리 전문가이자 따뜻한 AI 상담사입니다.${profile ? `\n\n[사용자 상황]\n- 관계: ${relType || '미정'}${profile.partnerName ? `\n- 상대방 이름: ${profile.partnerName}` : ''}` : ''}
+
+답변 시 지켜야 할 원칙:
+- 항상 자연스럽고 유창한 한국어로 대화하듯 답변하세요
+- 먼저 공감을 표현한 뒤 조언을 제공하세요
+- 구체적이고 바로 실천할 수 있는 조언을 주세요
+- 너무 길지 않게, 핵심만 간결하게 말하세요
+- 딱딱하거나 번역투 같은 표현은 절대 사용하지 마세요
+- 상대방 이름이 있으면 자연스럽게 활용하세요`;
 
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
           { role: "system", content: systemPrompt },
@@ -321,16 +352,17 @@ ${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n')}
         }
 
         // LLM을 통한 메시지 생성
-        const prompt = `당신은 연애 메시지 작성 전문가입니다. 자연스럽고 진심 어린 메시지를 작성합니다.
-
-상황: ${input.context}
+        const prompt = `상황: ${input.context}
 카테고리: ${input.category || '일반'}
 
-위 상황에 맞는 자연스러운 메시지를 1-2줄로 작성해주세요.`;
+위 상황에 딱 맞는 자연스러운 문자 메시지를 작성해 주세요.
+- 실제로 한국 사람이 연인이나 좋아하는 사람에게 보낼 법한 톤으로
+- 너무 길지 않게 1~2문장으로
+- 따옴표 없이 메시지 본문만 출력`;
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "당신은 연애 메시지 작성 전문가입니다." },
+            { role: "system", content: "당신은 연애 메시지 작성 전문가입니다. 한국인이 실제로 쓰는 자연스러운 문어체/구어체를 구분하여 상황에 맞는 메시지를 작성합니다. 절대 번역투나 어색한 표현을 쓰지 마세요." },
             { role: "user", content: prompt },
           ],
         });
