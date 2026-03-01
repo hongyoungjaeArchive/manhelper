@@ -61,14 +61,14 @@ export type InsertReminder = Partial<Reminder> & { userId: number; title: string
 export type AiConsultation = {
   id: number;
   userId: number;
-  consultationType: "crisis" | "signalAnalysis" | "messageRecommendation" | "other";
+  consultationType: "crisis" | "signalAnalysis" | "messageRecommendation" | "herMessage" | "chat" | "other";
   userInput: string;
   aiResponse: string;
   metadata: { positiveSignals?: number; negativeSignals?: number; probability?: number; recommendations?: string[] } | null;
   createdAt: string;
 };
 
-export type InsertAiConsultation = Partial<AiConsultation> & { userId: number; consultationType: AiConsultation["consultationType"]; userInput: string; aiResponse: string };
+export type InsertAiConsultation = Partial<AiConsultation> & { userId: number; consultationType: AiConsultation["consultationType"] | string; userInput: string; aiResponse: string };
 
 export type DailyUsageTracking = {
   id: number;

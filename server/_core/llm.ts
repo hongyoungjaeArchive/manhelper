@@ -265,17 +265,25 @@ const normalizeResponseFormat = ({
 
 /** 한자·일본어 등 CJK 문자 포함 여부 감지 */
 const hasCJK = (text: string) =>
-  /[\u4E00-\u9FFF\u3040-\u30FF\u3400-\u4DBF\uF900-\uFAFF]/.test(text);
+  /[\u4E00-\u9FFF\u3040-\u30FF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F]/.test(text);
+
+/** CJK 문자 및 불필요한 공백 제거 (최후 안전망) */
+const stripCJK = (text: string) =>
+  text
+    .replace(/[\u4E00-\u9FFF\u3040-\u30FF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F]+/g, "")
+    .replace(/\s{3,}/g, "\n\n")
+    .trim();
 
 /**
- * 한국어 전용 LLM 호출 — 응답에 한자가 섞이면 자동으로 한 번 재시도하여
- * 순수 한국어 응답을 반환합니다.
+ * 한국어 전용 LLM 호출 — 응답에 한자가 섞이면 자동으로 한 번 재시도하고,
+ * 최종적으로 남은 CJK 문자를 강제 제거하여 순수 한국어 응답을 반환합니다.
  */
 export async function invokeKoreanLLM(params: InvokeParams): Promise<string> {
   const result = await invokeLLM(params);
   const raw = result.choices[0]?.message.content;
   const text = typeof raw === "string" ? raw : "";
 
+  // CJK 없으면 바로 반환 (빠른 경로)
   if (!hasCJK(text)) return text;
 
   // 한자 감지 → 한국어로 교정 재요청
@@ -293,7 +301,10 @@ export async function invokeKoreanLLM(params: InvokeParams): Promise<string> {
   });
 
   const retryRaw = retryResult.choices[0]?.message.content;
-  return typeof retryRaw === "string" ? retryRaw : text;
+  const retryText = typeof retryRaw === "string" ? retryRaw : text;
+
+  // 최후 안전망: 재시도 후에도 남아 있는 CJK 문자 강제 제거
+  return stripCJK(retryText);
 }
 
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {

@@ -30,7 +30,7 @@ const COUPLE_EXAMPLES = `[실제 한국 커플 대화 패턴 참고]
 상황4 - 썸 진행: 단순 친구 → 카카오톡 이모티콘 변화 → 야간 연락 증가 → 단둘이 만남 → 스킨십 허용`;
 
 /** 과거 상담 이력을 AI 컨텍스트로 변환 — 반복 패턴을 파악해 개인화된 조언 제공 */
-async function buildUserHistoryContext(userId: string): Promise<string> {
+async function buildUserHistoryContext(userId: number): Promise<string> {
   const past = await getUserAiConsultations(userId, 10);
   if (past.length === 0) return "";
 
@@ -324,6 +324,62 @@ ${COUPLE_EXAMPLES}${historyCtx}
           negativeCount,
           timestamp: new Date(),
         };
+      }),
+
+    // 그녀의 메시지 해독
+    herMessage: protectedProcedure
+      .input(z.object({
+        herMessage: z.string().min(1).max(500),
+        context: z.string().max(200).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const today = new Date().toISOString().split('T')[0];
+        const usage = await getDailyUsageTracking(ctx.user.id, today);
+        const usedCount = usage?.consultationCount ?? 0;
+        const maxCount = usage?.maxAllowed ?? 3;
+        if (usedCount >= maxCount) throw new Error("일일 사용 횟수를 초과했습니다.");
+
+        const profile = await getUserProfile(ctx.user.id);
+        const partnerRef = profile?.partnerName ? `${profile.partnerName}` : "그녀";
+
+        const prompt = `${partnerRef}의 메시지: "${input.herMessage}"
+${input.context ? `[상황] ${input.context}` : ""}
+
+아래 형식으로 짧고 핵심만 답하세요:
+
+💭 진짜 의도
+(실제로 무슨 말인지 — 1~2줄)
+
+😤 지금 감정 상태
+(어떤 감정인지 — 1줄)
+
+💬 추천 답장
+(그대로 보내도 되는 카카오톡 메시지 본문만, 20~40자)
+
+⚠️ 주의
+(딱 한 줄)`;
+
+        const analysis = await invokeKoreanLLM({
+          messages: [
+            {
+              role: "system",
+              content: `여자친구/썸녀의 메시지를 해석하는 전문가입니다. 남자 입장에서 여자의 심리를 짧고 명확하게 분석합니다.
+${KOREAN_ONLY}
+${COUPLE_EXAMPLES}
+핵심만 간결하게. 서론 없이 바로 분석.`,
+            },
+            { role: "user", content: prompt },
+          ],
+        });
+
+        await createAiConsultation(ctx.user.id, {
+          consultationType: "herMessage",
+          userInput: input.herMessage,
+          aiResponse: analysis,
+        });
+        await incrementDailyUsage(ctx.user.id, today);
+
+        return { analysis, timestamp: new Date() };
       }),
 
     // AI 상담 이력 조회
