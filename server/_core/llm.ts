@@ -210,11 +210,11 @@ const normalizeToolChoice = (
 };
 
 const resolveApiUrl = () =>
-  "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+  "https://api.groq.com/openai/v1/chat/completions";
 
 const assertApiKey = () => {
   if (!ENV.geminiApiKey) {
-    throw new Error("GEMINI_API_KEY is not configured");
+    throw new Error("GROQ_API_KEY is not configured");
   }
 };
 
@@ -278,7 +278,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: "gemini-2.0-flash-lite",
+    model: "llama-3.1-8b-instant",
     messages: messages.map(normalizeMessage),
   };
 

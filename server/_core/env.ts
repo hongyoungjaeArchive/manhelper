@@ -4,5 +4,5 @@ export const ENV = {
   databaseUrl: process.env.DATABASE_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   isProduction: process.env.NODE_ENV === "production",
-  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+  geminiApiKey: process.env.GROQ_API_KEY ?? process.env.GEMINI_API_KEY ?? "",
 };
