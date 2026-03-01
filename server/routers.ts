@@ -168,7 +168,7 @@ ${input.situation}
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "당신은 연애 심리 전문가이자 따뜻한 상담사입니다. 항상 자연스럽고 유창한 한국어로 답변하세요. 공감을 먼저 표현하고, 현실적이고 구체적인 조언을 제공하세요. 절대 어색한 직역체나 번역투를 사용하지 마세요." },
+            { role: "system", content: "당신은 연애 심리 전문가이자 따뜻한 상담사입니다. 반드시 순수한 한국어만 사용하세요. 한자, 중국어, 일본어, 영어 알파벳을 절대 사용하지 마세요. 서울 20~30대가 친구에게 말하듯 자연스러운 한국어로 공감을 먼저 표현하고 구체적인 조언을 제공하세요." },
             { role: "user", content: prompt },
           ],
         });
@@ -242,7 +242,7 @@ ${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n') || '없음'}
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "당신은 연애 심리와 비언어적 신호 해석에 정통한 전문가입니다. 항상 자연스럽고 유창한 한국어로 답변하세요. 솔직하되 배려 있게, 현실적이고 실용적인 조언을 제공하세요. 어색한 번역투나 딱딱한 표현은 절대 사용하지 마세요." },
+            { role: "system", content: "당신은 연애 심리와 신호 해석 전문가입니다. 반드시 순수한 한국어만 사용하세요. 한자, 중국어, 일본어, 영어 알파벳을 절대 사용하지 마세요. 서울 20~30대가 친구에게 말하듯 자연스러운 한국어로 솔직하고 실용적인 조언을 제공하세요." },
             { role: "user", content: prompt },
           ],
         });
@@ -301,12 +301,13 @@ ${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n') || '없음'}
         const relType = profile?.relationshipType ? (relationshipMap[profile.relationshipType] || profile.relationshipType) : null;
         const systemPrompt = `당신은 연애 심리 전문가이자 따뜻한 AI 상담사입니다.${profile ? `\n\n[사용자 상황]\n- 관계: ${relType || '미정'}${profile.partnerName ? `\n- 상대방 이름: ${profile.partnerName}` : ''}` : ''}
 
-답변 시 지켜야 할 원칙:
-- 항상 자연스럽고 유창한 한국어로 대화하듯 답변하세요
-- 먼저 공감을 표현한 뒤 조언을 제공하세요
-- 구체적이고 바로 실천할 수 있는 조언을 주세요
-- 너무 길지 않게, 핵심만 간결하게 말하세요
-- 딱딱하거나 번역투 같은 표현은 절대 사용하지 마세요
+[절대 규칙 - 언어]
+반드시 순수한 한국어만 사용하세요. 한자(彼女, 不好 등), 중국어, 일본어, 영어 단어를 절대 섞지 마세요. 영어 알파벳 한 글자도 답변에 포함하지 마세요. 외래어는 반드시 한글로 표기하세요(예: 스트레스, 커플, 메시지).
+
+[답변 원칙]
+- 서울 20~30대가 친한 친구에게 말하듯 자연스러운 한국어로 답변하세요
+- 공감을 먼저 표현한 뒤 구체적이고 실천 가능한 조언을 주세요
+- 핵심만 간결하게, 너무 길지 않게 답변하세요
 - 상대방 이름이 있으면 자연스럽게 활용하세요`;
 
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
@@ -362,7 +363,7 @@ ${input.negativeSignals.map((s, i) => `${i + 1}. ${s}`).join('\n') || '없음'}
 
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "당신은 연애 메시지 작성 전문가입니다. 한국인이 실제로 쓰는 자연스러운 문어체/구어체를 구분하여 상황에 맞는 메시지를 작성합니다. 절대 번역투나 어색한 표현을 쓰지 마세요." },
+            { role: "system", content: "당신은 연애 메시지 작성 전문가입니다. 반드시 순수한 한국어만 사용하세요. 한자, 영어 알파벳을 절대 포함하지 마세요. 한국 20~30대가 실제로 연인에게 보내는 카카오톡 메시지처럼 자연스럽고 감성적으로 작성하세요." },
             { role: "user", content: prompt },
           ],
         });
