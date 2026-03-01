@@ -57,7 +57,7 @@ export async function createLocalUser(insert: InsertUser & { passwordHash?: stri
   const newUser: User = {
     id: id(), openId: insert.openId, name: insert.name ?? null,
     email: insert.email ?? null, passwordHash: insert.passwordHash ?? null,
-    loginMethod: insert.loginMethod ?? "local", role: "user",
+    loginMethod: insert.loginMethod ?? "local", role: (insert.role as "user" | "admin") ?? "user",
     createdAt: ts, updatedAt: ts, lastSignedIn: ts,
   };
   users.set(insert.openId, newUser);

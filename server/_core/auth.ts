@@ -10,6 +10,26 @@ function getBodyString(req: Request, key: string): string | undefined {
   return typeof val === "string" && val.trim().length > 0 ? val.trim() : undefined;
 }
 
+export async function seedAdminAccount() {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminEmail || !adminPassword) return;
+
+  const existing = await getUserByEmail(adminEmail);
+  if (existing) return;
+
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
+  await createLocalUser({
+    openId: `local:${adminEmail}`,
+    email: adminEmail,
+    name: "Admin",
+    loginMethod: "local",
+    passwordHash,
+    role: "admin",
+  } as any);
+  console.log(`[Auth] Admin account created: ${adminEmail}`);
+}
+
 export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/signup", async (req: Request, res: Response) => {
     const email = getBodyString(req, "email");
