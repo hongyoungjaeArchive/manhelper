@@ -32,11 +32,17 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
-  const allowedOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(",").map(o => o.trim())
-    : true;
+  const corsOrigins = (process.env.CORS_ORIGIN || "").split(",").map(o => o.trim()).filter(Boolean);
   app.use(cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (corsOrigins.length === 0) return callback(null, true);
+      const allowed = corsOrigins.some(allowed => {
+        const host = allowed.replace(/^https?:\/\//, "");
+        return origin === allowed || origin.endsWith("." + host);
+      });
+      callback(null, allowed);
+    },
     credentials: true,
   }));
   app.use(express.json({ limit: "50mb" }));
